@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ArrowLeft, Mail, FileText, Download, CheckCircle, Clock, Send, ShieldCheck, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Mail, FileText, Download, CheckCircle, Clock, Send, ShieldCheck, AlertTriangle, Phone } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 
@@ -106,8 +106,13 @@ export default function QuoteDetailPage() {
                 <span className="font-medium">{quote.fullName}</span>
               </div>
               <div>
-                <span className="text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Téléphone</span>
-                <span className="font-medium">{quote.phone}</span>
+                <span className="text-[10px] uppercase tracking-widest text-gray-500 block mb-2">Téléphone (Clic pour Appeler)</span>
+                <a 
+                  href={`tel:${quote.phone}`} 
+                  className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 px-3 py-1.5 rounded-lg font-bold transition-colors"
+                >
+                  <Phone size={16} /> {quote.phone}
+                </a>
               </div>
               <div>
                 <span className="text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Email</span>
@@ -135,7 +140,7 @@ export default function QuoteDetailPage() {
             </div>
           </div>
 
-          {/* Documents */}
+        {/* Documents */}
           <div className="bg-white/5 border border-white/10 rounded-xl p-6">
             <h2 className="text-lg font-bold uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
               Pièces Justificatives
@@ -162,6 +167,56 @@ export default function QuoteDetailPage() {
             ) : (
               <p className="text-sm text-gray-500">Aucun document fourni.</p>
             )}
+          </div>
+
+          {/* Messagerie Admin */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h2 className="text-lg font-bold uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
+              <Mail size={20} /> Messagerie Rapide
+            </h2>
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const to = form.to.value;
+                const subject = form.subject.value;
+                const message = form.message.value;
+                setActionLoading(true);
+                try {
+                  await api.sendCustomEmail(to, subject, message);
+                  alert("E-mail envoyé avec succès !");
+                  form.reset();
+                } catch (err) {
+                  alert("Erreur lors de l'envoi de l'e-mail.");
+                } finally {
+                  setActionLoading(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Destinataire</label>
+                <select name="to" required className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-white/50">
+                  <option value={quote.email || ""}>Client ({quote.email || "Non renseigné"})</option>
+                  <option value="assureur@example.com">Assureur (assureur@example.com)</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Objet</label>
+                <input type="text" name="subject" required placeholder="Ex: Pièces manquantes pour votre dossier" className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-white/50" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Message</label>
+                <textarea name="message" required rows={4} placeholder="Tapez votre message ici..." className="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-white/50"></textarea>
+              </div>
+              <button 
+                type="submit" 
+                disabled={actionLoading}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50"
+              >
+                <Send size={14} /> Envoyer l'E-mail
+              </button>
+            </form>
           </div>
         </div>
 
