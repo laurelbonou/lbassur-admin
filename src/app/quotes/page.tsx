@@ -13,6 +13,7 @@ const statusColors: Record<string, string> = {
   PROCESSING: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   INSURER_PENDING: "bg-purple-500/10 text-purple-500 border-purple-500/20",
   COMPLETED: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+  DRAFT: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
 const statusLabels: Record<string, string> = {
@@ -21,6 +22,7 @@ const statusLabels: Record<string, string> = {
   PROCESSING: "En Traitement (Payé)",
   INSURER_PENDING: "Chez l'Assureur",
   COMPLETED: "Terminé",
+  DRAFT: "Panier Abandonné",
 };
 
 export default function QuotesListPage() {
@@ -62,9 +64,31 @@ export default function QuotesListPage() {
               className="w-full bg-black/50 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-white/30 text-white placeholder-gray-600 transition-colors"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-black/50 border border-white/10 rounded-lg text-sm font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-            <Filter size={16} /> Filtrer
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => {
+                import('xlsx').then(XLSX => {
+                  const ws = XLSX.utils.json_to_sheet(quotes.map(q => ({
+                    ID: q.id,
+                    Client: q.fullName,
+                    Email: q.email,
+                    Téléphone: q.phone,
+                    Date: format(new Date(q.createdAt), "dd/MM/yyyy HH:mm"),
+                    Statut: statusLabels[q.status] || q.status
+                  })));
+                  const wb = XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(wb, ws, "Souscriptions");
+                  XLSX.writeFile(wb, "souscriptions_lbassur.xlsx");
+                });
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg text-sm font-bold text-green-500 hover:bg-green-500/20 transition-colors"
+            >
+              Exporter Excel
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 bg-black/50 border border-white/10 rounded-lg text-sm font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+              <Filter size={16} /> Filtrer
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

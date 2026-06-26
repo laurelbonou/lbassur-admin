@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
 import { cookies } from "next/headers";
-import { LayoutDashboard, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, ShieldAlert } from "lucide-react";
 import { logoutAction } from "./login/actions";
 import "./globals.css";
 
@@ -56,8 +56,11 @@ export default async function RootLayout({
                 <Link href="/" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                   <LayoutDashboard size={18} /> Vue d'ensemble
                 </Link>
-                <Link href="/quotes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold bg-white/10 text-white rounded-lg transition-colors">
+                <Link href="/quotes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                   <FileText size={18} /> Souscriptions
+                </Link>
+                <Link href="/sinistres" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                  <ShieldAlert size={18} /> Sinistres
                 </Link>
                 <Link href="/settings" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                   <Settings size={18} /> Paramètres
