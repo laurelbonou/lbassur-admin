@@ -43,6 +43,24 @@ export const api = {
     });
     if (!res.ok) throw new Error("Failed to send custom email");
     return res.json();
+  },
+
+  getProfileRequests: async () => {
+    const res = await fetch(`${API_BASE_URL}/clients/change-requests`);
+    if (!res.ok) throw new Error("Failed to fetch profile requests");
+    return res.json();
+  },
+
+  updateProfileRequestStatus: async (id: string, status: string, adminNote?: string) => {
+    const res = await fetch(`${API_BASE_URL}/clients/change-requests/${id}/status`, {
+      method: "PATCH",
+      headers: { 
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status, adminNote })
+    });
+    if (!res.ok) throw new Error("Failed to update profile request");
+    return res.json();
   }
 };
 

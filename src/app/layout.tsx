@@ -59,8 +59,8 @@ export default async function RootLayout({
                 <Link href="/quotes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                   <FileText size={18} /> Souscriptions
                 </Link>
-                <Link href="/sinistres" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  <ShieldAlert size={18} /> Sinistres
+                <Link href="/profile-requests" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                  <ShieldAlert size={18} /> Demandes Profil
                 </Link>
                 <Link href="/settings" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                   <Settings size={18} /> Paramètres
