@@ -3,11 +3,19 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ShieldAlert, Search, Filter, CheckCircle2, ChevronDown } from "lucide-react";
+import { ShieldAlert, Search, Filter, Paperclip, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import {
+  CLAIM_STATUS,
+  CLAIM_TYPE_LABELS,
+  UNKNOWN_STATUS_CLASS,
+  claimStatusOf,
+} from "@/lib/claims";
 
 export default function AdminClaimsPage() {
   const [claims, setClaims] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchClaims();
@@ -28,6 +36,7 @@ export default function AdminClaimsPage() {
   };
 
   const handleUpdateStatus = async (id: string, status: string) => {
+    setError("");
     try {
       const res = await fetch(`/api/proxy/clients/claims/${id}`, {
         method: "PATCH",
@@ -36,9 +45,14 @@ export default function AdminClaimsPage() {
       });
       if (res.ok) {
         fetchClaims();
+      } else {
+        // Un échec silencieux avait masqué le bug du statut inexistant pendant
+        // tout ce temps : le select revenait à sa valeur d'origine, sans un mot.
+        setError("Le changement de statut a échoué. Le sinistre n'a pas été modifié.");
       }
     } catch (err) {
       console.error(err);
+      setError("Serveur injoignable. Le changement de statut n'a pas été enregistré.");
     }
   };
 
@@ -52,6 +66,12 @@ export default function AdminClaimsPage() {
           <p className="text-gray-400 text-sm">Traitez et suivez les déclarations de sinistres de vos clients.</p>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 mb-6 text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
         <div className="p-4 border-b border-white/10 flex gap-4">
@@ -100,9 +120,20 @@ export default function AdminClaimsPage() {
                       <div className="text-xs text-gray-500">{claim.client?.phone}</div>
                     </td>
                     <td className="p-4 max-w-xs">
-                      <div className="text-white text-xs mb-1 font-semibold">Date d'incident: {format(new Date(claim.incidentDate), "dd MMM yyyy", { locale: fr })}</div>
+                      <div className="text-white text-xs mb-1 font-semibold">
+                        {CLAIM_TYPE_LABELS[claim.claimType] ?? "Nature non précisée"}
+                        {claim.locationCity ? ` — ${claim.locationCity}` : ""}
+                      </div>
                       <div className="text-xs text-gray-400 line-clamp-2" title={claim.description}>{claim.description}</div>
-                      <div className="text-[10px] text-gray-600 mt-1">Déclaré le {format(new Date(claim.createdAt), "dd MMM yyyy", { locale: fr })}</div>
+                      <div className="text-[10px] text-gray-600 mt-1 flex items-center gap-2 flex-wrap">
+                        <span>Incident le {format(new Date(claim.incidentDate), "dd MMM yyyy", { locale: fr })}</span>
+                        <span>· Déclaré le {format(new Date(claim.createdAt), "dd MMM yyyy", { locale: fr })}</span>
+                        {claim.attachments?.length > 0 && (
+                          <span className="inline-flex items-center gap-1 text-gray-400">
+                            <Paperclip size={10} /> {claim.attachments.length}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       {claim.quoteRequest ? (
@@ -116,27 +147,30 @@ export default function AdminClaimsPage() {
                     </td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                        claim.status === "PENDING" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
-                        claim.status === "INVESTIGATING" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
-                        claim.status === "RESOLVED" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
-                        "bg-red-500/10 text-red-500 border-red-500/20"
+                        claimStatusOf(claim.status)?.className ?? UNKNOWN_STATUS_CLASS
                       }`}>
-                        {claim.status === "PENDING" ? "En Attente" :
-                         claim.status === "INVESTIGATING" ? "En Cours" :
-                         claim.status === "RESOLVED" ? "Résolu" : "Rejeté"}
+                        {claimStatusOf(claim.status)?.label ?? claim.status}
                       </span>
                     </td>
                     <td className="p-4">
-                      <select 
-                        value={claim.status}
-                        onChange={(e) => handleUpdateStatus(claim.id, e.target.value)}
-                        className="bg-black/50 border border-white/10 text-xs text-white p-2 rounded focus:outline-none focus:border-white/30"
-                      >
-                        <option value="PENDING">Mettre en attente</option>
-                        <option value="INVESTIGATING">Traiter (En cours)</option>
-                        <option value="RESOLVED">Marquer Résolu</option>
-                        <option value="REJECTED">Rejeter</option>
-                      </select>
+                      <div className="flex items-center gap-3">
+                        <select
+                          value={claim.status}
+                          onChange={(e) => handleUpdateStatus(claim.id, e.target.value)}
+                          className="bg-black/50 border border-white/10 text-xs text-white p-2 rounded focus:outline-none focus:border-white/30"
+                        >
+                          {Object.entries(CLAIM_STATUS).map(([value, { action }]) => (
+                            <option key={value} value={value}>{action}</option>
+                          ))}
+                        </select>
+                        <Link
+                          href={`/sinistres/${claim.id}`}
+                          title="Ouvrir la fiche"
+                          className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-white whitespace-nowrap transition-colors"
+                        >
+                          Fiche <ChevronRight size={14} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))

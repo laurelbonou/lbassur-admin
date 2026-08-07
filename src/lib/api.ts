@@ -45,6 +45,28 @@ export const api = {
     return res.json();
   },
 
+  getClaims: async () => {
+    const res = await fetch(`${API_BASE_URL}/clients/claims`);
+    if (!res.ok) throw new Error("Failed to fetch claims");
+    return res.json();
+  },
+
+  getClaim: async (id: string) => {
+    const res = await fetch(`${API_BASE_URL}/clients/claims/${id}`);
+    if (!res.ok) throw new Error("Claim not found");
+    return res.json();
+  },
+
+  updateClaimStatus: async (id: string, status: string) => {
+    const res = await fetch(`${API_BASE_URL}/clients/claims/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error("Failed to update claim status");
+    return res.json();
+  },
+
   getProfileRequests: async () => {
     const res = await fetch(`${API_BASE_URL}/clients/change-requests`);
     if (!res.ok) throw new Error("Failed to fetch profile requests");
