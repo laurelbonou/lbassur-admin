@@ -71,6 +71,16 @@ export const api = {
     return res.json();
   },
 
+  /**
+   * Compose le dossier PDF a transmettre a la compagnie. Regenere a chaque
+   * appel : le dossier evolue, un PDF fige serait perime.
+   */
+  generateClaimReport: async (id: string) => {
+    const res = await fetch(`${API_BASE_URL}/clients/claims/${id}/report`, { method: "POST" });
+    if (!res.ok) throw new Error("Failed to generate claim report");
+    return res.json() as Promise<{ url: string; publicId: string }>;
+  },
+
   getProfileRequests: async () => {
     const res = await fetch(`${API_BASE_URL}/clients/change-requests`);
     if (!res.ok) throw new Error("Failed to fetch profile requests");

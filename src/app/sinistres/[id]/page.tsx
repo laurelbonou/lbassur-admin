@@ -41,6 +41,7 @@ export default function ClaimDetailsPage() {
   const [updating, setUpdating] = useState(false);
   const [note, setNote] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -84,6 +85,23 @@ export default function ClaimDetailsPage() {
   // Le statut ne change pas quand on enregistre une note : on renvoie l'actuel.
   const handleUpdateStatus = (status: string) => save(status);
   const handleSaveNote = () => save(claim.status, note);
+
+  const handleExport = async () => {
+    if (!id) return;
+    setExporting(true);
+    setError("");
+    try {
+      const { url } = await api.generateClaimReport(id);
+      // Ouvert dans un onglet : le gestionnaire enchaîne souvent sur l'envoi
+      // du dossier et ne veut pas quitter la fiche.
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error(err);
+      setError("La génération du dossier a échoué.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -131,6 +149,15 @@ export default function ClaimDetailsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            title="Génère le dossier complet, photos incluses, à transmettre à la compagnie"
+            className="inline-flex items-center gap-2 bg-white/5 border border-white/10 text-gray-300 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-colors disabled:opacity-40"
+          >
+            <Download size={14} />
+            {exporting ? "Génération…" : "Dossier PDF"}
+          </button>
           <span
             className={`inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
               status?.className ?? UNKNOWN_STATUS_CLASS
