@@ -3,8 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
 import { cookies } from "next/headers";
-import { LayoutDashboard, FileText, Settings, LogOut, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, ShieldAlert, Siren } from "lucide-react";
 import { logoutAction } from "./login/actions";
+import { SESSION_COOKIE, isValidSessionToken } from "@/lib/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,7 +29,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const isAuthenticated = cookieStore.has("admin_session");
+  // La signature est vérifiée ici aussi, et pas seulement dans le proxy : la
+  // documentation de Next est explicite, le proxy ne sert qu'à un contrôle
+  // optimiste et ne doit pas porter seul l'autorisation.
+  const isAuthenticated = await isValidSessionToken(cookieStore.get(SESSION_COOKIE)?.value);
 
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
@@ -58,6 +62,9 @@ export default async function RootLayout({
                 </Link>
                 <Link href="/quotes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                   <FileText size={18} /> Souscriptions
+                </Link>
+                <Link href="/sinistres" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                  <Siren size={18} /> Sinistres
                 </Link>
                 <Link href="/profile-requests" className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                   <ShieldAlert size={18} /> Demandes Profil

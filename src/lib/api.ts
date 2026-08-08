@@ -57,11 +57,15 @@ export const api = {
     return res.json();
   },
 
-  updateClaimStatus: async (id: string, status: string) => {
+  /**
+   * `adminNote` omis laisse la note existante intacte ; une chaîne vide
+   * l'efface. Le backend applique la même distinction.
+   */
+  updateClaimStatus: async (id: string, status: string, adminNote?: string) => {
     const res = await fetch(`${API_BASE_URL}/clients/claims/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...(adminNote === undefined ? {} : { adminNote }) }),
     });
     if (!res.ok) throw new Error("Failed to update claim status");
     return res.json();

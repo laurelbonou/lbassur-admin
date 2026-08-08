@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Car,
   Download,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -38,6 +39,8 @@ export default function ClaimDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [note, setNote] = useState("");
+  const [noteSaved, setNoteSaved] = useState(false);
 
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -46,7 +49,9 @@ export default function ClaimDetailsPage() {
 
     const fetchClaim = async () => {
       try {
-        setClaim(await api.getClaim(id));
+        const data = await api.getClaim(id);
+        setClaim(data);
+        setNote(data.adminNote ?? "");
       } catch (err) {
         console.error(err);
         setError("Impossible de charger ce sinistre.");
@@ -58,19 +63,27 @@ export default function ClaimDetailsPage() {
     fetchClaim();
   }, [id]);
 
-  const handleUpdateStatus = async (status: string) => {
+  const save = async (status: string, adminNote?: string) => {
     if (!id) return;
     setUpdating(true);
     setError("");
+    setNoteSaved(false);
     try {
-      setClaim(await api.updateClaimStatus(id, status));
+      const updated = await api.updateClaimStatus(id, status, adminNote);
+      setClaim(updated);
+      setNote(updated.adminNote ?? "");
+      if (adminNote !== undefined) setNoteSaved(true);
     } catch (err) {
       console.error(err);
-      setError("Le changement de statut a échoué. Le sinistre n'a pas été modifié.");
+      setError("L'enregistrement a échoué. Le sinistre n'a pas été modifié.");
     } finally {
       setUpdating(false);
     }
   };
+
+  // Le statut ne change pas quand on enregistre une note : on renvoie l'actuel.
+  const handleUpdateStatus = (status: string) => save(status);
+  const handleSaveNote = () => save(claim.status, note);
 
   if (loading) {
     return (
@@ -113,7 +126,7 @@ export default function ClaimDetailsPage() {
           <p className="text-gray-400 text-sm">
             Déclaré le {format(new Date(claim.createdAt), "dd MMMM yyyy 'à' HH:mm", { locale: fr })}
             {" · "}
-            <span className="font-mono text-gray-500">{claim.id}</span>
+            <span className="font-mono text-white">{claim.reference}</span>
           </p>
         </div>
 
@@ -279,6 +292,35 @@ export default function ClaimDetailsPage() {
 
         {/* ── Colonne latérale ────────────────────────────────────────── */}
         <div className="space-y-6">
+          <Card title="Message au client" icon={<MessageSquare size={16} />}>
+            <p className="text-[10px] text-gray-500 mb-3 leading-relaxed">
+              Visible par le client dans son espace membre : pièce manquante,
+              motif de rejet, avancement du dossier.
+            </p>
+            <textarea
+              value={note}
+              onChange={(e) => {
+                setNote(e.target.value);
+                setNoteSaved(false);
+              }}
+              rows={5}
+              placeholder="Ex. Merci de nous transmettre le constat amiable signé des deux parties."
+              className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-white/30 resize-none"
+            />
+            <button
+              onClick={handleSaveNote}
+              disabled={updating || note === (claim.adminNote ?? "")}
+              className="w-full mt-3 bg-white text-black py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {updating ? "Enregistrement…" : "Enregistrer le message"}
+            </button>
+            {noteSaved && (
+              <p className="text-[10px] text-emerald-500 mt-2 text-center">
+                Message enregistré — le client le voit dans son espace.
+              </p>
+            )}
+          </Card>
+
           <Card title="Client" icon={<User size={16} />}>
             <div className="space-y-4">
               <Field label="Nom" value={claim.client?.fullName || "Non renseigné"} />

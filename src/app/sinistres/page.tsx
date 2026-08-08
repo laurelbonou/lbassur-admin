@@ -120,6 +120,7 @@ export default function AdminClaimsPage() {
                       <div className="text-xs text-gray-500">{claim.client?.phone}</div>
                     </td>
                     <td className="p-4 max-w-xs">
+                      <div className="font-mono text-[10px] text-gray-500 mb-1">{claim.reference}</div>
                       <div className="text-white text-xs mb-1 font-semibold">
                         {CLAIM_TYPE_LABELS[claim.claimType] ?? "Nature non précisée"}
                         {claim.locationCity ? ` — ${claim.locationCity}` : ""}
